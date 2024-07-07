@@ -4,9 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>感情分析アプリ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>感情分析アプリへようこそ</h1>
-    <p>このプロジェクトは感情分析を行うためのアプリケーションです。</p>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="p-8">
+            <h1 class="text-3xl font-bold mb-4">感情分析アプリ</h1>
+            <p class="mb-4">このアプリケーションは、テキストの感情分析を行い、怒りや穏やかさを判定します。深層学習技術を使用して、入力されたテキストの感情を分析します。</p>
+            <h2 class="text-2xl font-bold mb-2">主な機能：</h2>
+            <ul class="list-disc list-inside mb-4">
+                <li>単一テキストの感情分析</li>
+                <li>バッチ処理による複数テキストの分析</li>
+                <li>ユーザーフィードバックによるモデルの継続的な学習</li>
+                <li>分析結果の統計情報の表示</li>
+            </ul>
+            <p class="mb-4">このアプリケーションはPythonとFlaskを使用して構築されており、BERTモデルを用いて感情分析を行っています。</p>
+            <p>詳細については、<a href="https://github.com/<あなたのユーザー名>/<リポジトリ名>" class="text-blue-500 hover:underline">GitHubリポジトリ</a>をご覧ください。</p>
+        </div>
+    </div>
 </body>
 </html>
