@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>感情分析アプリ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl">
+        <div class="p-8">
+            <h1 class="text-2xl font-bold mb-4">感情分析アプリ</h1>
+            <textarea id="input-text" class="w-full p-2 border rounded" rows="4" placeholder="ここにテキストを入力してください"></textarea>
+            <button id="analyze-btn" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">分析する</button>
+            <div id="result" class="mt-4"></div>
+            <div id="feedback" class="mt-4 hidden">
+                <p class="mb-2">この分析は正確でしたか？</p>
+                <button onclick="sendFeedback(true)" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 mr-2">はい（正確）</button>
+                <button onclick="sendFeedback(false)" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">いいえ（不正確）</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let lastAnalysis = null;
+    
+        document.getElementById('analyze-btn').addEventListener('click', async () => {
+            const text = document.getElementById('input-text').value;
+            const response = await fetch('/analyze', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({text})
+            });
+            const data = await response.json();
+            console.log("Debug - Received data:", data);  // デバッグ用の出力を追加
+            
+            const resultDiv = document.getElementById('result');
+            
+            const angryProb = (data.probability.angry * 100).toFixed(2);
+            const notAngryProb = (data.probability.not_angry * 100).toFixed(2);
+            
+            let resultHTML = `
+                <div class="fade-in">
+                    <p class="font-bold ${data.sentiment === 'angry' ? 'text-red-500' : 'text-green-500'}">
+                        ${data.sentiment === 'angry' ? '怒っているように見えます' : '穏やかに見えます'}
+                    </p>
+                    <p class="mt-2">${data.advice}</p>
+                    <p class="mt-2">確信度: 怒り ${angryProb}%, 穏やか ${notAngryProb}%</p>
+                </div>
+            `;
+            
+            if (lastAnalysis) {
+                const angryDiff = ((data.probability.angry - lastAnalysis.probability.angry) * 100).toFixed(2);
+                const notAngryDiff = ((data.probability.not_angry - lastAnalysis.probability.not_angry) * 100).toFixed(2);
+                resultHTML += `
+                    <div class="mt-4 p-2 bg-gray-100 rounded fade-in">
+                        <p class="font-bold">前回の分析との比較:</p>
+                        <p>怒り: ${angryDiff > 0 ? '+' : ''}${angryDiff}%</p>
+                        <p>穏やか: ${notAngryDiff > 0 ? '+' : ''}${notAngryDiff}%</p>
+                    </div>
+                `;
+            }
+            
+            resultDiv.innerHTML = resultHTML;
+            document.getElementById('feedback').classList.remove('hidden');
+            
+            lastAnalysis = data;
+        });
+    
+        async function sendFeedback(isCorrect) {
+            const text = document.getElementById('input-text').value;
+            const sentiment = document.querySelector('#result p').textContent.includes('怒っている') ? 'angry' : 'not_angry';
+            
+            const response = await fetch('/feedback', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({text, sentiment, is_correct: isCorrect})
+            });
+            
+            if (response.ok) {
+                alert('フィードバックありがとうございます！モデルが更新されました。');
+                // フィードバック後に再分析
+                document.getElementById('analyze-btn').click();
+            } else {
+                alert('フィードバックの送信に失敗しました。');
+            }
+        }
+    </script>
+</body>
+</html>

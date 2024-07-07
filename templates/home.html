@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>感情分析アプリ - ホーム</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl">
+        <div class="p-8">
+            <h1 class="text-2xl font-bold mb-4">感情分析アプリ</h1>
+            <div class="space-y-4">
+                <a href="/batch_analysis" class="block w-full text-center py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600">バッチ分析</a>
+                <a href="/single_analysis" class="block w-full text-center py-2 px-4 bg-green-500 text-white rounded hover:bg-green-600">単一テキスト分析</a>
+            </div>
+            <div class="mt-8">
+                <h2 class="text-xl font-bold mb-2">統計情報</h2>
+                <p>総回答数: {{ stats.total_feedbacks }}</p>
+                <p>正確な回答数: {{ stats.correct_feedbacks }}</p>
+                <p>最新100件の正確度: {{ "%.2f"|format(stats.accuracy) }}%</p>
+                <p>怒りと判定された数: {{ stats.angry_count }}</p>
+                <p>穏やかと判定された数: {{ stats.not_angry_count }}</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

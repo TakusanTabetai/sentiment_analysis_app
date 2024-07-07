@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>単一テキスト感情分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <a href="/" class="absolute top-4 left-4 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">ホームに戻る</a>
+    <div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl mt-16">
+        <div class="p-8">
+            <h1 class="text-2xl font-bold mb-4">単一テキスト感情分析</h1>
+            <textarea id="input-text" class="w-full p-2 border rounded" rows="4" placeholder="ここにテキストを入力してください"></textarea>
+            <button id="analyze-btn" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">分析する</button>
+            <div id="result" class="mt-4"></div>
+            <div id="feedback" class="mt-4 hidden">
+                <p>この分析結果は正確ですか？</p>
+                <button onclick="submitFeedback(true)" class="px-2 py-1 bg-green-500 text-white rounded mr-2">はい（正確）</button>
+                <button onclick="submitFeedback(false)" class="px-2 py-1 bg-red-500 text-white rounded">いいえ（不正確）</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        let currentAnalysis = null;
+
+        document.getElementById('analyze-btn').addEventListener('click', async () => {
+            const text = document.getElementById('input-text').value;
+            const response = await fetch('/analyze', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({text})
+            });
+            const data = await response.json();
+            currentAnalysis = data;
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `
+                <p class="font-bold ${data.sentiment === 'angry' ? 'text-red-500' : 'text-green-500'}">
+                    ${data.sentiment === 'angry' ? '怒っているように見えます' : '穏やかに見えます'}
+                </p>
+                <p class="mt-2">${data.advice}</p>
+                <p class="mt-2">確信度: 怒り ${(data.probability.angry * 100).toFixed(2)}%, 穏やか ${(data.probability.not_angry * 100).toFixed(2)}%</p>
+            `;
+            document.getElementById('feedback').classList.remove('hidden');
+        });
+
+        async function submitFeedback(isCorrect) {
+            if (!currentAnalysis) return;
+
+            const feedback = {
+                text: currentAnalysis.text,
+                modelSentiment: currentAnalysis.sentiment,
+                isCorrect: isCorrect
+            };
+
+            const response = await fetch('/submit_feedback', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(feedback)
+            });
+
+            const result = await response.json();
+            if (result.status === 'success') {
+                alert('フィードバックを送信しました。ありがとうございます！');
+            } else {
+                alert('フィードバックの送信に失敗しました。');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10問テスト</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <a href="/" class="absolute top-4 left-4 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">ホームに戻る</a>
+    <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-md overflow-hidden mt-16">
+        <div class="p-8">
+            <h1 class="text-2xl font-bold mb-4">10問テスト</h1>
+            <div id="test-container"></div>
+        </div>
+    </div>
+    <script>
+        let testResults = [];
+
+        async function loadTestTexts() {
+            const response = await fetch('/get_test_texts');
+            testResults = await response.json();
+            displayTest();
+        }
+
+        function displayTest() {
+            const container = document.getElementById('test-container');
+            container.innerHTML = testResults.map((result, index) => `
+                <div class="mb-4 p-4 bg-gray-50 rounded">
+                    <p class="mb-2">${index + 1}. ${result.text}</p>
+                    <p class="mb-2">モデルの判断: ${result.sentiment === 'angry' ? '怒っている' : '穏やか'}</p>
+                    <p class="mb-2">確信度: 怒り ${(result.probability.angry * 100).toFixed(2)}%, 穏やか ${(result.probability.not_angry * 100).toFixed(2)}%</p>
+                    <div class="flex justify-between">
+                        <button class="px-2 py-1 bg-green-500 text-white rounded" onclick="submitFeedback(${index}, true)">正確</button>
+                        <button class="px-2 py-1 bg-red-500 text-white rounded" onclick="submitFeedback(${index}, false)">不正確</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function submitFeedback(index, isCorrect) {
+            const result = testResults[index];
+            const feedback = {
+                text: result.text,
+                modelSentiment: result.sentiment,
+                isCorrect: isCorrect
+            };
+
+            const response = await fetch('/submit_feedback', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(feedback)
+            });
+
+            const responseData = await response.json();
+            if (responseData.status === 'success') {
+                alert('フィードバックを送信しました。ありがとうございます！');
+            } else {
+                alert('フィードバックの送信に失敗しました。');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadTestTexts);
+    </script>
+</body>
+</html>
